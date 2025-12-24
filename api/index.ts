@@ -1,5 +1,6 @@
 // Vercel Serverless Function Entry Point
-import app from '../server/src/index';
+// Import from built server code
+import app from '../server/dist/index';
 
 export default app;
 
