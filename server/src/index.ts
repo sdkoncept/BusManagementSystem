@@ -34,8 +34,19 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
 
+// Test database connection on startup
+prisma.$connect()
+  .then(() => console.log('✓ Database connected'))
+  .catch((err) => {
+    console.error('✗ Database connection failed:', err.message);
+    console.error('Please check your DATABASE_URL in .env file');
+  });
+
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -83,16 +94,28 @@ app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚌 Eagle Line API server running on port ${PORT}`);
-});
+// Export app for Vercel serverless functions
+export default app;
 
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  await prisma.$disconnect();
-  process.exit(0);
-});
+// Start server only if not in serverless environment
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`🚌 Eagle Line API server running on port ${PORT}`);
+  }).on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`❌ Port ${PORT} is already in use`);
+    } else {
+      console.error('❌ Server error:', err);
+    }
+    process.exit(1);
+  });
+
+  // Graceful shutdown
+  process.on('SIGTERM', async () => {
+    await prisma.$disconnect();
+    process.exit(0);
+  });
+}
 
 
 
