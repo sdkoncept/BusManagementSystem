@@ -1,0 +1,637 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  STAFF
+  RIDER
+  DRIVER
+  STORE_KEEPER
+}
+
+enum TripStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  DELAYED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum SeatStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+  MAINTENANCE
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  FULFILLED
+}
+
+enum RequestType {
+  FUEL
+  HELP
+  INVENTORY
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  firstName     String
+  lastName      String
+  phone         String?
+  role          UserRole  @default(RIDER)
+  driverId      String?   @unique // Link to driver if user is a driver
+  loyaltyPoints Int       @default(0)
+  vipTier       String?   @default("BRONZE") // BRONZE, SILVER, GOLD, PLATINUM
+  referralCode  String?   @unique
+  referredBy    String? // User ID who referred this user
+  dateOfBirth   DateTime? // For birthday discounts
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  bookings            Booking[]
+  driver              Driver?              @relation(fields: [driverId], references: [id])
+  requests            Request[]
+  favoriteRoutes      FavoriteRoute[]
+  tripReviews         TripReview[]
+  waitlistEntries     WaitlistEntry[]
+  loyaltyTransactions LoyaltyTransaction[]
+  complaints          Complaint[]
+  customerProfile     CustomerProfile?
+
+  @@map("users")
+}
+
+model Driver {
+  id                String   @id @default(cuid())
+  firstName         String
+  lastName          String
+  dateOfBirth       DateTime
+  phoneNumber       String
+  driversLicense    String   @unique
+  licenseExpiryDate DateTime
+  bloodGroup        String
+  nextOfKinName     String
+  nextOfKinPhone    String
+  nextOfKinRelation String
+  homeAddress       String
+  yearsInService    Int      @default(0) // Years of service with Eagle Line
+  totalEarnings     Float    @default(0) // Cumulative earnings
+  onTimeRate        Float    @default(0) // Percentage of on-time trips
+  rating            Float    @default(0) // Average rating from passengers
+  totalTrips        Int      @default(0) // Total completed trips
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  trips       Trip[]
+  user        User?
+  earnings    DriverEarning[]
+  incidents   Incident[]
+  inspections VehicleInspection[]
+  messages    Message[]           @relation("DriverMessages")
+
+  @@map("drivers")
+}
+
+model Station {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  address   String
+  city      String
+  state     String?
+  country   String
+  latitude  Float?
+  longitude Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  routeStations RouteStation[]
+  trips         Trip[]         @relation("OriginTrips")
+  tripsDest     Trip[]         @relation("DestinationTrips")
+
+  @@map("stations")
+}
+
+model Route {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  description String?
+  distance    Float? // in kilometers
+  duration    Int? // in minutes
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  routeStations RouteStation[]
+  trips         Trip[]
+  schedule      RouteSchedule?
+  favorites     FavoriteRoute[]
+
+  @@map("routes")
+}
+
+model RouteSchedule {
+  id        String   @id @default(cuid())
+  routeId   String   @unique
+  startTime String   @default("07:00") // Daily start time (7am)
+  endTime   String   @default("16:00") // Daily end time (4pm)
+  interval  Int      @default(60) // Interval in minutes between trips
+  price     Float // Default price for this route
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  route Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@map("route_schedules")
+}
+
+model RouteStation {
+  id        String   @id @default(cuid())
+  routeId   String
+  stationId String
+  order     Int // Order of station in the route
+  distance  Float? // Distance from route start
+  createdAt DateTime @default(now())
+
+  route   Route   @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  station Station @relation(fields: [stationId], references: [id], onDelete: Cascade)
+
+  @@unique([routeId, stationId])
+  @@map("route_stations")
+}
+
+model Bus {
+  id              String    @id @default(cuid())
+  plateNumber     String    @unique
+  vehicleType     String    @default("Bus") // "Bus" or "Sienna"
+  model           String
+  manufacturer    String
+  year            Int
+  capacity        Int // Total number of seats
+  seatLayout      String // JSON string representing seat layout
+  amenities       String? // JSON string for amenities
+  lastMaintenance DateTime? // Last maintenance date
+  nextMaintenance DateTime? // Next scheduled maintenance
+  mileage         Float?    @default(0) // Current mileage
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  trips Trip[]
+
+  @@map("buses")
+}
+
+model Trip {
+  id               String     @id @default(cuid())
+  routeId          String
+  busId            String
+  driverId         String?
+  originId         String
+  destinationId    String
+  departureTime    DateTime
+  arrivalTime      DateTime
+  price            Float
+  status           TripStatus @default(SCHEDULED)
+  currentLocation  String? // For tracking
+  currentLatitude  Float? // GPS latitude
+  currentLongitude Float? // GPS longitude
+  delayMinutes     Int?       @default(0)
+  estimatedArrival DateTime? // Updated ETA
+  passengerCount   Int        @default(0) // Real-time passenger count
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  route           Route               @relation(fields: [routeId], references: [id])
+  bus             Bus                 @relation(fields: [busId], references: [id])
+  driver          Driver?             @relation(fields: [driverId], references: [id])
+  origin          Station             @relation("OriginTrips", fields: [originId], references: [id])
+  destination     Station             @relation("DestinationTrips", fields: [destinationId], references: [id])
+  bookings        Booking[]
+  seats           Seat[]
+  reviews         TripReview[]
+  waitlistEntries WaitlistEntry[]
+  incidents       Incident[]
+  inspections     VehicleInspection[]
+
+  @@map("trips")
+}
+
+model Seat {
+  id         String     @id @default(cuid())
+  tripId     String
+  seatNumber String
+  status     SeatStatus @default(AVAILABLE)
+  bookingId  String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  trip    Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  booking Booking? @relation(fields: [bookingId], references: [id])
+
+  @@unique([tripId, seatNumber])
+  @@map("seats")
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  userId          String
+  tripId          String
+  seatNumbers     String[] // Array of seat numbers
+  passengerName   String
+  passengerPhone  String
+  passengerEmail  String?
+  totalAmount     Float
+  status          BookingStatus @default(PENDING)
+  bookingDate     DateTime      @default(now())
+  qrCode          String?       @unique // QR code for boarding pass
+  ticketNumber    String?       @unique // Unique ticket number
+  paymentMethod   String? // CASH, CARD, TRANSFER, etc.
+  paymentStatus   String?       @default("PENDING") // PENDING, PAID, REFUNDED
+  specialRequests String? // JSON string for special requests
+  seatPreference  String? // WINDOW, AISLE, NONE
+  checkedIn       Boolean       @default(false)
+  checkedInAt     DateTime?
+  refundAmount    Float?        @default(0)
+  refundReason    String?
+  refundedAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id])
+  trip     Trip      @relation(fields: [tripId], references: [id])
+  seats    Seat[]
+  payments Payment[]
+
+  @@map("bookings")
+}
+
+model Settings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String // JSON string for complex values
+  category  String // e.g., "booking", "payment", "notification"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model InventoryItem {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  category    String // e.g., "Spare Parts", "Tools", "Fluids", "Supplies"
+  unit        String // e.g., "pieces", "liters", "kg"
+  quantity    Int      @default(0)
+  minQuantity Int      @default(0) // Minimum stock level
+  unitPrice   Float? // Price per unit
+  location    String? // Storage location
+  barcode     String?  @unique // Barcode/QR code
+  supplierId  String? // Preferred supplier
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  requests       StockRequest[]
+  stockMovements StockMovement[]
+  supplier       Supplier?       @relation(fields: [supplierId], references: [id])
+
+  @@map("inventory_items")
+}
+
+model StockRequest {
+  id          String        @id @default(cuid())
+  inventoryId String
+  requestedBy String // User ID of mechanic/requester
+  quantity    Int
+  reason      String? // Reason for request
+  status      RequestStatus @default(PENDING)
+  approvedBy  String? // User ID of approver (admin)
+  approvedAt  DateTime?
+  fulfilledBy String? // User ID of store keeper
+  fulfilledAt DateTime?
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  inventory InventoryItem @relation(fields: [inventoryId], references: [id])
+
+  @@map("stock_requests")
+}
+
+model Request {
+  id          String        @id @default(cuid())
+  type        RequestType
+  userId      String // Driver/User making the request
+  tripId      String? // Related trip if applicable
+  title       String
+  description String
+  location    String? // Current location for help requests
+  amount      Float? // Amount for fuel requests
+  status      RequestStatus @default(PENDING)
+  respondedBy String? // User ID who responded
+  response    String? // Response/notes
+  respondedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("requests")
+}
+
+// New models for enhanced features
+
+model FavoriteRoute {
+  id        String   @id @default(cuid())
+  userId    String
+  routeId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  route Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, routeId])
+  @@map("favorite_routes")
+}
+
+model TripReview {
+  id           String   @id @default(cuid())
+  userId       String
+  tripId       String
+  rating       Int // 1-5 stars
+  comment      String?
+  driverRating Int? // Separate rating for driver
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tripId])
+  @@map("trip_reviews")
+}
+
+model WaitlistEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  tripId    String
+  seatCount Int      @default(1)
+  notified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tripId])
+  @@map("waitlist_entries")
+}
+
+model LoyaltyTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String // EARNED, REDEEMED, EXPIRED, REFERRAL_BONUS
+  points      Int // Positive for earned, negative for redeemed
+  description String
+  bookingId   String? // Related booking if applicable
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("loyalty_transactions")
+}
+
+model Payment {
+  id         String    @id @default(cuid())
+  bookingId  String
+  amount     Float
+  method     String // CASH, CARD, TRANSFER, USSD, etc.
+  reference  String?   @unique // Payment gateway reference
+  status     String    @default("PENDING") // PENDING, SUCCESS, FAILED, REFUNDED
+  paidAt     DateTime?
+  refundedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model DriverEarning {
+  id          String   @id @default(cuid())
+  driverId    String
+  tripId      String?
+  amount      Float
+  type        String // TRIP, BONUS, GRATUITY, OVERTIME
+  description String?
+  period      String? // WEEK, MONTH, YEAR for bonuses
+  createdAt   DateTime @default(now())
+
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@map("driver_earnings")
+}
+
+model Incident {
+  id          String    @id @default(cuid())
+  tripId      String?
+  driverId    String
+  type        String // ACCIDENT, BREAKDOWN, EMERGENCY, SPEED_VIOLATION, etc.
+  severity    String    @default("LOW") // LOW, MEDIUM, HIGH, CRITICAL
+  description String
+  location    String?
+  latitude    Float?
+  longitude   Float?
+  reportedAt  DateTime  @default(now())
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  resolution  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  trip   Trip?  @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  driver Driver @relation(fields: [driverId], references: [id])
+
+  @@map("incidents")
+}
+
+model VehicleInspection {
+  id             String   @id @default(cuid())
+  tripId         String?
+  busId          String
+  driverId       String
+  inspectionType String // PRE_TRIP, POST_TRIP, ROUTINE
+  checklist      String // JSON string of inspection checklist
+  status         String   @default("PENDING") // PENDING, PASSED, FAILED
+  notes          String?
+  inspectedAt    DateTime @default(now())
+  inspectedBy    String? // Driver or inspector ID
+
+  trip   Trip?  @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  driver Driver @relation(fields: [driverId], references: [id])
+
+  @@map("vehicle_inspections")
+}
+
+model Message {
+  id         String    @id @default(cuid())
+  senderId   String // User ID who sent
+  receiverId String? // User ID who receives (null for broadcast)
+  driverId   String? // If message is for specific driver
+  type       String    @default("MESSAGE") // MESSAGE, ANNOUNCEMENT, ALERT
+  subject    String?
+  content    String
+  isRead     Boolean   @default(false)
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  driver Driver? @relation("DriverMessages", fields: [driverId], references: [id], onDelete: SetNull)
+
+  @@map("messages")
+}
+
+model CustomerProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  totalBookings  Int      @default(0)
+  totalSpent     Float    @default(0)
+  preferredSeat  String? // WINDOW, AISLE
+  specialNeeds   String? // JSON string for special needs
+  marketingOptIn Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("customer_profiles")
+}
+
+model Complaint {
+  id          String    @id @default(cuid())
+  userId      String
+  bookingId   String?
+  type        String // SERVICE, DELAY, CANCELLATION, PAYMENT, OTHER
+  subject     String
+  description String
+  status      String    @default("PENDING") // PENDING, IN_PROGRESS, RESOLVED, CLOSED
+  priority    String    @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  assignedTo  String? // Staff/Admin ID
+  resolution  String?
+  resolvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("complaints")
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  category    String // FUEL, MAINTENANCE, SALARY, INSURANCE, TAX, OTHER
+  amount      Float
+  description String
+  busId       String? // If expense is bus-specific
+  driverId    String? // If expense is driver-specific
+  receiptUrl  String? // URL to receipt image/document
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("expenses")
+}
+
+model MaintenanceSchedule {
+  id            String    @id @default(cuid())
+  busId         String
+  type          String // ROUTINE, REPAIR, INSPECTION
+  description   String
+  scheduledDate DateTime
+  completedDate DateTime?
+  cost          Float?    @default(0)
+  status        String    @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("maintenance_schedules")
+}
+
+model Supplier {
+  id          String   @id @default(cuid())
+  name        String
+  contactName String?
+  email       String?
+  phone       String?
+  address     String?
+  category    String? // Parts, Fluids, Tools, etc.
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  purchaseOrders PurchaseOrder[]
+  inventoryItems InventoryItem[]
+
+  @@map("suppliers")
+}
+
+model PurchaseOrder {
+  id           String    @id @default(cuid())
+  supplierId   String
+  orderNumber  String    @unique
+  items        String // JSON string of items
+  totalAmount  Float
+  status       String    @default("PENDING") // PENDING, APPROVED, ORDERED, RECEIVED, CANCELLED
+  orderDate    DateTime  @default(now())
+  expectedDate DateTime?
+  receivedDate DateTime?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  supplier Supplier @relation(fields: [supplierId], references: [id])
+
+  @@map("purchase_orders")
+}
+
+model StockMovement {
+  id          String   @id @default(cuid())
+  inventoryId String
+  type        String // IN, OUT, ADJUSTMENT, TRANSFER
+  quantity    Int
+  reason      String?
+  referenceId String? // Related to request, order, etc.
+  performedBy String // User ID
+  createdAt   DateTime @default(now())
+
+  inventory InventoryItem @relation(fields: [inventoryId], references: [id])
+
+  @@map("stock_movements")
+}
