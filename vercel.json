@@ -1,5 +1,6 @@
 {
-  "buildCommand": "npm install || exit 1; cd server && npm install || exit 1; npx prisma generate || exit 1; cd ../client && npm install || exit 1; npm run build || exit 1",
+  "installCommand": "npm install",
+  "buildCommand": "npm run vercel-build",
   "outputDirectory": "client/dist",
   "rewrites": [
     {
