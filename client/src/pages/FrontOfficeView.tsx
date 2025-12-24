@@ -196,7 +196,7 @@ export default function FrontOfficeView() {
                                 <Clock className="h-4 w-4" />
                                 <span>{format(new Date(trip.departureTime), 'hh:mm a')}</span>
                               </div>
-                              <div>Price: ₦{trip.price.toFixed(2)}</div>
+                              <div>Price: ₦{trip.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                               <div>Available: {availableSeats} seats</div>
                             </div>
                             {trip.bus && (
@@ -227,7 +227,7 @@ export default function FrontOfficeView() {
                   </div>
                   <div className="text-xs text-gray-600 space-y-1">
                     <div>{format(new Date(selectedTrip.departureTime), 'MMM dd, yyyy hh:mm a')}</div>
-                    <div>Price: ₦{selectedTrip.price.toFixed(2)} per seat</div>
+                    <div>Price: ₦{selectedTrip.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} per seat</div>
                   </div>
                 </div>
 

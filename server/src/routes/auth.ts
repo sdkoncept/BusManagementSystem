@@ -7,6 +7,11 @@ import { authenticate } from '../middleware/auth';
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Test database connection on startup
+prisma.$connect()
+  .then(() => console.log('✓ Database connected for auth routes'))
+  .catch((err) => console.error('✗ Database connection error:', err.message));
+
 // Register
 router.post('/register', async (req, res) => {
   try {
@@ -59,6 +64,10 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
     // Find user
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
@@ -90,7 +99,11 @@ router.post('/login', async (req, res) => {
       token,
     });
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    console.error('Login error:', error);
+    res.status(500).json({ 
+      message: error.message || 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+    });
   }
 });
 

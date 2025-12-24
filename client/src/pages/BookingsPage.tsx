@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Calendar, Clock, DollarSign, X, Search, Filter, User, Phone, Mail, Ticket, CheckCircle } from 'lucide-react';
+import { MapPin, Calendar, Clock, X, Search, Filter, User, Phone, Mail, Ticket, CheckCircle } from 'lucide-react';
 import api from '../services/api';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -115,7 +115,7 @@ export default function BookingsPage({ admin }: BookingsPageProps) {
                 <p className="text-2xl font-bold text-gray-900">₦{stats.totalRevenue.toLocaleString()}</p>
                 <p className="text-xs text-green-600 mt-1">Today: ₦{stats.todayRevenue.toLocaleString()}</p>
               </div>
-              <DollarSign className="h-8 w-8 text-green-600" />
+              <span className="text-3xl">₦</span>
             </div>
           </div>
           <div className="bg-white rounded-lg shadow-md p-4">
@@ -249,7 +249,7 @@ export default function BookingsPage({ admin }: BookingsPageProps) {
                         {booking.status}
                       </span>
                     </div>
-                    <p className="text-2xl font-bold text-gray-900 mb-4">₦{booking.totalAmount?.toFixed(2) || '0.00'}</p>
+                    <p className="text-2xl font-bold text-gray-900 mb-4">₦{(booking.totalAmount || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                     <div className="space-y-2">
                       {booking.status === 'CONFIRMED' && (
                         <Link

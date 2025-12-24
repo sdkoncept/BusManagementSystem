@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 // Get all bookings (with filters)
 router.get('/', authenticate, async (req: AuthRequest, res) => {
   try {
-    const { userId, tripId, status } = req.query;
+    const { userId, tripId, status, limit, skip } = req.query;
     const where: any = {};
 
     // Regular users can only see their own bookings
@@ -20,6 +20,10 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
 
     if (tripId) where.tripId = tripId as string;
     if (status) where.status = status as BookingStatus;
+
+    // Default limit for dashboard (can be overridden)
+    const takeLimit = limit ? parseInt(limit as string) : undefined;
+    const skipCount = skip ? parseInt(skip as string) : undefined;
 
     const bookings = await prisma.booking.findMany({
       where,
@@ -34,14 +38,40 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
         },
         trip: {
           include: {
-            route: true,
-            bus: true,
-            origin: true,
-            destination: true,
+            route: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+              },
+            },
+            bus: {
+              select: {
+                id: true,
+                plateNumber: true,
+                model: true,
+              },
+            },
+            origin: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+              },
+            },
+            destination: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+              },
+            },
           },
         },
       },
       orderBy: { bookingDate: 'desc' },
+      take: takeLimit,
+      skip: skipCount,
     });
 
     res.json(bookings);

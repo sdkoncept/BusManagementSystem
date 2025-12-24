@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { MapPin, Play, User, Phone, DollarSign } from 'lucide-react';
+import { MapPin, Play, User, Phone } from 'lucide-react';
 import api from '../services/api';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -100,7 +100,7 @@ export default function DetailedTripView() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span>Revenue: ${(bookings.length * trip.price).toFixed(2)}</span>
+                    <span>Revenue: ₦{(bookings.length * trip.price).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     <span>Riders: {bookings.length}</span>
                   </div>
                 </div>
@@ -232,7 +232,7 @@ export default function DetailedTripView() {
                   <div className="pt-4 border-t">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm text-gray-600">Charged Amount:</span>
-                      <span className="font-bold text-lg">${selectedRider.totalAmount.toFixed(2)}</span>
+                      <span className="font-bold text-lg">₦{selectedRider.totalAmount.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">Sit No.:</span>

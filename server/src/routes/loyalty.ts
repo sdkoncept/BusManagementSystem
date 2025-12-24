@@ -109,11 +109,11 @@ router.post('/referral/apply', authenticate, async (req: AuthRequest, res) => {
     await Promise.all([
       prisma.user.update({
         where: { id: referrer.id },
-        data: { loyaltyPoints: { increment: 100 } } },
+        data: { loyaltyPoints: { increment: 100 } },
       }),
       prisma.user.update({
         where: { id: userId },
-        data: { loyaltyPoints: { increment: 50 } } },
+        data: { loyaltyPoints: { increment: 50 } },
       }),
       prisma.loyaltyTransaction.create({
         data: {

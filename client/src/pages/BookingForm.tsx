@@ -104,7 +104,7 @@ export default function BookingForm() {
                 <span>{format(new Date(trip.departureTime), 'hh:mm a')}</span>
               </div>
               <div>
-                <span className="font-semibold text-lg">${trip.price.toFixed(2)}</span>
+                <span className="font-semibold text-lg">₦{trip.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 <span className="text-gray-600 ml-2">per seat</span>
               </div>
             </div>
@@ -212,11 +212,11 @@ export default function BookingForm() {
               <div className="pt-4 border-t">
                 <div className="flex justify-between mb-2">
                   <span>Seats ({selectedSeats.length})</span>
-                  <span>${(trip.price * selectedSeats.length).toFixed(2)}</span>
+                  <span>₦{(trip.price * selectedSeats.length).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>${(trip.price * selectedSeats.length).toFixed(2)}</span>
+                  <span>₦{(trip.price * selectedSeats.length).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
               </div>
               <button

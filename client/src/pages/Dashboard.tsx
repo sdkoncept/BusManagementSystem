@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { Link } from 'react-router-dom';
 import { Calendar, MapPin, Ticket, Clock } from 'lucide-react';
@@ -11,13 +11,27 @@ export default function Dashboard() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Memoize stats calculations to avoid recalculating on every render
+  const stats = useMemo(() => {
+    const upcoming = bookings.filter((b) => b.status === 'CONFIRMED' && b.trip && new Date(b.trip.departureTime) > new Date()).length;
+    const completed = bookings.filter((b) => b.status === 'COMPLETED').length;
+    return {
+      total: bookings.length,
+      upcoming,
+      completed,
+    };
+  }, [bookings]);
+
   useEffect(() => {
     loadBookings();
   }, []);
 
   const loadBookings = async () => {
     try {
-      const response = await api.get('/bookings');
+      // Only load recent bookings for dashboard (limit to 10)
+      const response = await api.get('/bookings', {
+        params: { limit: 10 }
+      });
       setBookings(response.data);
     } catch (error) {
       toast.error('Failed to load bookings');
@@ -38,7 +52,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Total Bookings</p>
-              <p className="text-3xl font-bold text-gray-900">{bookings.length}</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
             </div>
             <Ticket className="h-12 w-12 text-primary-600" />
           </div>
@@ -47,9 +61,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Upcoming Trips</p>
-              <p className="text-3xl font-bold text-gray-900">
-                {bookings.filter((b) => b.status === 'CONFIRMED' && new Date(b.trip.departureTime) > new Date()).length}
-              </p>
+              <p className="text-3xl font-bold text-gray-900">{stats.upcoming}</p>
             </div>
             <Calendar className="h-12 w-12 text-green-600" />
           </div>
@@ -58,9 +70,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Completed</p>
-              <p className="text-3xl font-bold text-gray-900">
-                {bookings.filter((b) => b.status === 'COMPLETED').length}
-              </p>
+              <p className="text-3xl font-bold text-gray-900">{stats.completed}</p>
             </div>
             <Clock className="h-12 w-12 text-gray-600" />
           </div>
@@ -89,13 +99,13 @@ export default function Dashboard() {
                     <div className="flex items-center space-x-2 mb-2">
                       <MapPin className="h-5 w-5 text-gray-400" />
                       <span className="font-medium">
-                        {booking.trip.origin.name} → {booking.trip.destination.name}
+                        {booking.trip?.origin?.name || 'N/A'} → {booking.trip?.destination?.name || 'N/A'}
                       </span>
                     </div>
                     <div className="text-sm text-gray-600 space-y-1">
                       <p>
                         <Calendar className="h-4 w-4 inline mr-1" />
-                        {format(new Date(booking.trip.departureTime), 'MMM dd, yyyy hh:mm a')}
+                        {booking.trip?.departureTime ? format(new Date(booking.trip.departureTime), 'MMM dd, yyyy hh:mm a') : 'N/A'}
                       </p>
                       <p>Seats: {booking.seatNumbers.join(', ')}</p>
                       <p>Passenger: {booking.passengerName}</p>
@@ -113,7 +123,7 @@ export default function Dashboard() {
                     >
                       {booking.status}
                     </span>
-                    <p className="text-lg font-bold text-gray-900 mt-2">${booking.totalAmount.toFixed(2)}</p>
+                    <p className="text-lg font-bold text-gray-900 mt-2">₦{booking.totalAmount.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   </div>
                 </div>
               </div>

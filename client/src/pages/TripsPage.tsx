@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { MapPin, Calendar, Clock, DollarSign, Bus } from 'lucide-react';
+import { MapPin, Calendar, Clock, Bus } from 'lucide-react';
 import api from '../services/api';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -189,8 +189,7 @@ export default function TripsPage({ admin }: TripsPageProps) {
                 </div>
                 <div className="mt-4 md:mt-0 md:ml-6 text-right">
                   <p className="text-2xl font-bold text-gray-900 mb-2">
-                    <DollarSign className="h-5 w-5 inline" />
-                    {trip.price.toFixed(2)}
+                    ₦{trip.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
                   {admin ? (
                     <div className="space-y-2">

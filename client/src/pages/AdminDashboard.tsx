@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { 
-  Bus, Users, MapPin, Calendar, DollarSign, TrendingUp, 
+  Bus, Users, MapPin, Calendar, TrendingUp, 
   AlertCircle, CheckCircle, Clock, Edit, Save, X 
 } from 'lucide-react';
 import api from '../services/api';
@@ -156,7 +156,7 @@ export default function AdminDashboard() {
                 <p className="text-2xl font-bold text-gray-900">₦{stats.totalRevenue.toLocaleString()}</p>
                 <p className="text-xs text-green-600 mt-1">Today: ₦{stats.todayRevenue.toLocaleString()}</p>
               </div>
-              <DollarSign className="h-8 w-8 text-green-600" />
+              <span className="text-3xl">₦</span>
             </div>
           </div>
 
@@ -291,7 +291,7 @@ export default function AdminDashboard() {
                           >
                             {booking.status}
                           </span>
-                          <p className="text-lg font-bold text-gray-900 mt-2">₦{booking.totalAmount?.toFixed(2) || '0.00'}</p>
+                          <p className="text-lg font-bold text-gray-900 mt-2">₦{(booking.totalAmount || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                         </div>
                       </div>
                     </div>
@@ -344,7 +344,7 @@ export default function AdminDashboard() {
                           >
                             {trip.status}
                           </span>
-                          <p className="text-lg font-bold text-gray-900 mt-2">₦{trip.price?.toFixed(2) || '0.00'}</p>
+                          <p className="text-lg font-bold text-gray-900 mt-2">₦{(trip.price || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                         </div>
                       </div>
                     </div>

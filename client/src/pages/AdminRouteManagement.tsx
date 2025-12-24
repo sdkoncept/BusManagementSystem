@@ -447,7 +447,7 @@ export default function AdminRouteManagement() {
                         <div className="text-sm text-gray-600 space-y-1">
                           <p>Time: {selectedRoute.schedule.startTime} - {selectedRoute.schedule.endTime}</p>
                           <p>Interval: Every {selectedRoute.schedule.interval} minutes</p>
-                          <p>Price: ₦{selectedRoute.schedule.price.toFixed(2)}</p>
+                          <p>Price: ₦{selectedRoute.schedule.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                           <button
                             onClick={openScheduleModal}
                             className="mt-2 text-primary-600 hover:text-primary-700 text-xs"

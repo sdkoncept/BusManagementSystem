@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, Filter, Plus, MapPin, DollarSign, Users, Play, User, Bus, X, Edit } from 'lucide-react';
+import { Search, Filter, Plus, MapPin, Users, Play, User, Bus, X, Edit } from 'lucide-react';
 import api from '../services/api';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -359,11 +359,11 @@ export default function AdminTripManagement() {
                 <div>
                   <p className="text-sm text-gray-600">Total Revenue</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    ₦{completedTrips.reduce((sum, trip) => sum + (trip._count?.bookings || 0) * (trip.price || 0), 0).toFixed(2)}
+                    ₦{completedTrips.reduce((sum, trip) => sum + (trip._count?.bookings || 0) * (trip.price || 0), 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-yellow-600" />
+                  <span className="text-2xl">₦</span>
                 </div>
               </div>
             </div>
@@ -494,9 +494,8 @@ export default function AdminTripManagement() {
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center space-x-4">
                         <div className="flex items-center space-x-1">
-                          <DollarSign className="h-4 w-4 text-gray-500" />
                           <span className="font-semibold">
-                            Revenue: ${trip._count?.bookings ? (trip._count.bookings * trip.price).toFixed(2) : '0.00'}
+                            Revenue: ₦{trip._count?.bookings ? (trip._count.bookings * trip.price).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
                           </span>
                         </div>
                         <div className="flex items-center space-x-1">
