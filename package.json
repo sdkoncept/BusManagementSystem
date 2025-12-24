@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Robust bus management system for Eagle Line",
   "main": "index.js",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "cd server && npm run dev",
