@@ -23,7 +23,7 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
       return res.status(401).json({ message: 'Authentication required' });
     }
 
-    const jwtSecret = (process as any).env?.JWT_SECRET || 'secret';
+    const jwtSecret = process.env.JWT_SECRET || 'secret';
     const decoded = jwt.verify(token, jwtSecret) as any;
     req.user = decoded;
     next();
