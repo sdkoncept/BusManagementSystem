@@ -64,7 +64,7 @@ router.get('/driver/my-earnings', authenticate, async (req: AuthRequest, res) =>
             departureTime: true,
           },
         },
-      },
+      } as any,
       orderBy: { createdAt: 'desc' },
     });
 
@@ -145,7 +145,7 @@ router.get('/drivers', authenticate, authorize('ADMIN'), async (req, res) => {
             destination: { select: { name: true } },
           },
         },
-      },
+      } as any,
       orderBy: { createdAt: 'desc' },
     });
 

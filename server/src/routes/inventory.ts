@@ -1,6 +1,6 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import { authenticate, authorize } from '../middleware/auth';
+import { authenticate, authorize, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -172,7 +172,7 @@ router.get('/requests/all', authenticate, authorize('ADMIN', 'STAFF', 'STORE_KEE
 });
 
 // Create stock request (Staff/Mechanic/Driver)
-router.post('/requests', authenticate, authorize('ADMIN', 'STAFF', 'STORE_KEEPER', 'DRIVER'), async (req, res) => {
+router.post('/requests', authenticate, authorize('ADMIN', 'STAFF', 'STORE_KEEPER', 'DRIVER'), async (req: AuthRequest, res) => {
   try {
     const { inventoryId, quantity, reason } = req.body;
     const requestedById = req.user!.id;
@@ -206,7 +206,7 @@ router.post('/requests', authenticate, authorize('ADMIN', 'STAFF', 'STORE_KEEPER
 });
 
 // Approve stock request (Admin only)
-router.patch('/requests/:id/approve', authenticate, authorize('ADMIN'), async (req, res) => {
+router.patch('/requests/:id/approve', authenticate, authorize('ADMIN'), async (req: AuthRequest, res) => {
   try {
     const { notes } = req.body;
     const userId = req.user!.id;
@@ -253,7 +253,7 @@ router.patch('/requests/:id/reject', authenticate, authorize('ADMIN'), async (re
 });
 
 // Fulfill stock request (Store Keeper/Staff)
-router.patch('/requests/:id/fulfill', authenticate, authorize('ADMIN', 'STAFF', 'STORE_KEEPER'), async (req, res) => {
+router.patch('/requests/:id/fulfill', authenticate, authorize('ADMIN', 'STAFF', 'STORE_KEEPER'), async (req: AuthRequest, res) => {
   try {
     const userId = req.user!.id;
 
@@ -330,7 +330,7 @@ router.get('/:id/movements', authenticate, authorize('ADMIN', 'STORE_KEEPER'), a
 });
 
 // Record stock movement (Admin/Store Keeper)
-router.post('/:id/movements', authenticate, authorize('ADMIN', 'STORE_KEEPER'), async (req, res) => {
+router.post('/:id/movements', authenticate, authorize('ADMIN', 'STORE_KEEPER'), async (req: AuthRequest, res) => {
   try {
     const { type, quantity, reason, referenceId } = req.body;
     const performedBy = req.user!.id;

@@ -31,8 +31,8 @@ router.post('/', authenticate, authorize('ADMIN'), async (req, res) => {
             model: true,
           },
         },
-      } as any,
-    });
+      },
+    } as any);
 
     // Update bus's next maintenance date
     await prisma.bus.update({
@@ -67,9 +67,9 @@ router.get('/', authenticate, authorize('ADMIN', 'STAFF'), async (req, res) => {
             vehicleType: true,
           },
         },
-      } as any,
+      },
       orderBy: { scheduledDate: 'asc' },
-    });
+    } as any);
 
     res.json(schedules);
   } catch (error: any) {
@@ -95,8 +95,8 @@ router.put('/:id', authenticate, authorize('ADMIN'), async (req, res) => {
       },
       include: {
         bus: true,
-      } as any,
-    });
+      },
+    } as any);
 
     // Update bus's last maintenance if completed
     if (status === 'COMPLETED' && completedDate) {

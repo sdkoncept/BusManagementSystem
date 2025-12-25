@@ -1,6 +1,6 @@
 import express from 'express';
 import { PrismaClient, TripStatus } from '@prisma/client';
-import { authenticate, authorize } from '../middleware/auth';
+import { authenticate, authorize, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -1151,7 +1151,7 @@ router.delete('/:id', authenticate, authorize('ADMIN'), async (req, res) => {
 });
 
 // Get driver's trips (for driver mobile app)
-router.get('/driver/my-trips', authenticate, authorize('DRIVER'), async (req, res) => {
+router.get('/driver/my-trips', authenticate, authorize('DRIVER'), async (req: AuthRequest, res) => {
   try {
     const userId = req.user!.id;
     
@@ -1274,7 +1274,7 @@ router.get('/driver/my-trips', authenticate, authorize('DRIVER'), async (req, re
 });
 
 // Get driver's trip history with filters (Driver only)
-router.get('/driver/history', authenticate, authorize('DRIVER'), async (req, res) => {
+router.get('/driver/history', authenticate, authorize('DRIVER'), async (req: AuthRequest, res) => {
   try {
     const userId = req.user!.id;
     

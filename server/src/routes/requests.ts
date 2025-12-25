@@ -1,6 +1,6 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import { authenticate, authorize } from '../middleware/auth';
+import { authenticate, authorize, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -42,7 +42,7 @@ router.get('/', authenticate, authorize('ADMIN', 'STAFF'), async (req, res) => {
 });
 
 // Get user's own requests
-router.get('/my-requests', authenticate, async (req, res) => {
+router.get('/my-requests', authenticate, async (req: AuthRequest, res) => {
   try {
     const userId = req.user!.id;
     const { type, status } = req.query;
@@ -68,7 +68,7 @@ router.get('/my-requests', authenticate, async (req, res) => {
 });
 
 // Create fuel request (Driver)
-router.post('/fuel', authenticate, async (req, res) => {
+router.post('/fuel', authenticate, async (req: AuthRequest, res) => {
   try {
     const { tripId, amount, description, location } = req.body;
     const userId = req.user!.id;
@@ -101,7 +101,7 @@ router.post('/fuel', authenticate, async (req, res) => {
 });
 
 // Create help request (Driver)
-router.post('/help', authenticate, async (req, res) => {
+router.post('/help', authenticate, async (req: AuthRequest, res) => {
   try {
     const { tripId, description, location } = req.body;
     const userId = req.user!.id;
@@ -134,7 +134,7 @@ router.post('/help', authenticate, async (req, res) => {
 });
 
 // Respond to request (Admin/Staff)
-router.patch('/:id/respond', authenticate, authorize('ADMIN', 'STAFF'), async (req, res) => {
+router.patch('/:id/respond', authenticate, authorize('ADMIN', 'STAFF'), async (req: AuthRequest, res) => {
   try {
     const { status, response } = req.body;
     const userId = req.user!.id;
@@ -170,7 +170,7 @@ router.patch('/:id/respond', authenticate, authorize('ADMIN', 'STAFF'), async (r
 });
 
 // Get request by ID
-router.get('/:id', authenticate, async (req, res) => {
+router.get('/:id', authenticate, async (req: AuthRequest, res) => {
   try {
     const request = await prisma.request.findUnique({
       where: { id: req.params.id },
@@ -192,7 +192,8 @@ router.get('/:id', authenticate, async (req, res) => {
     }
 
     // Check if user has permission to view this request
-    if (request.userId !== req.user!.id && req.user!.role !== 'ADMIN' && req.user!.role !== 'STAFF') {
+    const authReq = req as AuthRequest;
+    if (request.userId !== authReq.user!.id && authReq.user!.role !== 'ADMIN' && authReq.user!.role !== 'STAFF') {
       return res.status(403).json({ message: 'Access denied' });
     }
 

@@ -1,6 +1,6 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import { authenticate, authorize } from '../middleware/auth';
+import { authenticate, authorize, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -177,7 +177,7 @@ router.put('/:id', authenticate, authorize('ADMIN', 'STAFF'), async (req, res) =
 });
 
 // Get current driver's profile (Driver only)
-router.get('/me', authenticate, authorize('DRIVER'), async (req, res) => {
+router.get('/me', authenticate, authorize('DRIVER'), async (req: AuthRequest, res) => {
   try {
     const userId = req.user!.id;
     
