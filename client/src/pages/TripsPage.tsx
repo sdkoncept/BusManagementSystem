@@ -54,10 +54,11 @@ export default function TripsPage({ admin }: TripsPageProps) {
       }
 
       const response = await api.get('/trips', { params });
+      const tripsData = Array.isArray(response.data) ? response.data : [];
       // Filter to only show trips with bus and driver for passenger view
       const availableTrips = admin 
-        ? response.data 
-        : response.data.filter((trip: any) => trip.isAvailable && trip.availableSeats > 0);
+        ? tripsData 
+        : tripsData.filter((trip: any) => trip.isAvailable && trip.availableSeats > 0);
       setTrips(availableTrips);
     } catch (error) {
       toast.error('Failed to load trips');
