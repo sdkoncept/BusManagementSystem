@@ -65,7 +65,7 @@ export default function StationsPage({ admin }: StationsPageProps) {
   const loadStations = async () => {
     try {
       const response = await api.get('/stations');
-      const stationsData = response.data;
+      const stationsData = Array.isArray(response.data) ? response.data : [];
       setStations(stationsData);
       
       // Set map center based on stations if available

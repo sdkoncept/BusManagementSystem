@@ -32,9 +32,10 @@ export default function Dashboard() {
       const response = await api.get('/bookings', {
         params: { limit: 10 }
       });
-      setBookings(response.data);
+      setBookings(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       toast.error('Failed to load bookings');
+      setBookings([]);
     } finally {
       setLoading(false);
     }

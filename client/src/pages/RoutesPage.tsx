@@ -18,9 +18,10 @@ export default function RoutesPage({ admin }: RoutesPageProps) {
   const loadRoutes = async () => {
     try {
       const response = await api.get('/routes', { params: { isActive: 'true' } });
-      setRoutes(response.data);
+      setRoutes(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       toast.error('Failed to load routes');
+      setRoutes([]);
     } finally {
       setLoading(false);
     }

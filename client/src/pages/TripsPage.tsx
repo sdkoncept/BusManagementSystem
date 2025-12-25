@@ -33,9 +33,10 @@ export default function TripsPage({ admin }: TripsPageProps) {
   const loadStations = async () => {
     try {
       const response = await api.get('/stations');
-      setStations(response.data);
+      setStations(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Failed to load stations:', error);
+      setStations([]);
     }
   };
 
