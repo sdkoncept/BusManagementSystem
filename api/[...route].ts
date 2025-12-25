@@ -3,7 +3,8 @@
 // Vercel automatically routes /api/* requests to this handler
 
 import serverless from 'serverless-http';
-import app from '../server/dist/index';
+// Import from compiled dist - server is built before client in buildCommand
+import app from '../server/dist/index.js';
 
 // Wrap Express app with serverless-http for Vercel
 const handler = serverless(app);
