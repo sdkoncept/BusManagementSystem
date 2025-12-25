@@ -4,9 +4,8 @@
 
 import serverless from 'serverless-http';
 
-// Import Express app from source - Vercel will compile it
+// Import Express app - use require for CommonJS compatibility
 // The server is built during buildCommand, so dist exists at runtime
-// Use require() to handle CommonJS module from compiled dist
 const appModule = require('../server/dist/index');
 const app = appModule.default || appModule;
 

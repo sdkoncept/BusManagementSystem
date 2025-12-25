@@ -16,16 +16,16 @@
     "install:all": "npm install && cd server && npm install && cd ../client && npm install",
     "vercel-build": "cd server && npm install && npx prisma generate && cd ../client && npm install --include=dev && npm run build"
   },
-  "keywords": ["bus", "management", "booking", "reservation"],
+  "keywords": [
+    "bus",
+    "management",
+    "booking",
+    "reservation"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@vercel/node": "^5.5.16",
     "concurrently": "^8.2.2"
   }
 }
-
-
-
-
-
-
