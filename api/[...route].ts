@@ -6,5 +6,6 @@
 // Vercel will compile TypeScript automatically
 import app from '../server/src/index';
 
+// Export the Express app directly - Vercel will handle it correctly
 export default app;
 
