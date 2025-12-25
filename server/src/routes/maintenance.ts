@@ -31,7 +31,7 @@ router.post('/', authenticate, authorize('ADMIN'), async (req, res) => {
             model: true,
           },
         },
-      },
+      } as any,
     });
 
     // Update bus's next maintenance date
@@ -67,7 +67,7 @@ router.get('/', authenticate, authorize('ADMIN', 'STAFF'), async (req, res) => {
             vehicleType: true,
           },
         },
-      },
+      } as any,
       orderBy: { scheduledDate: 'asc' },
     });
 
@@ -95,7 +95,7 @@ router.put('/:id', authenticate, authorize('ADMIN'), async (req, res) => {
       },
       include: {
         bus: true,
-      },
+      } as any,
     });
 
     // Update bus's last maintenance if completed

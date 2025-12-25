@@ -1,23 +1,30 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
+// AuthRequest extends Express Request with user property
+// Explicitly include Request properties for TypeScript compatibility
 export interface AuthRequest extends Request {
   user?: {
     id: string;
     email: string;
     role: string;
   };
+  body: any;
+  params: any;
+  headers: any;
+  query: any;
 }
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
+    const token = req.headers?.authorization?.split(' ')[1];
     
     if (!token) {
       return res.status(401).json({ message: 'Authentication required' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as any;
+    const jwtSecret = (process as any).env?.JWT_SECRET || 'secret';
+    const decoded = jwt.verify(token, jwtSecret) as any;
     req.user = decoded;
     next();
   } catch (error) {
