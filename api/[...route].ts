@@ -3,8 +3,12 @@
 // Vercel automatically routes /api/* requests to this handler
 
 import serverless from 'serverless-http';
-// Import from compiled dist - server is built before client in buildCommand
-import app from '../server/dist/index.js';
+
+// Import Express app from source - Vercel will compile it
+// The server is built during buildCommand, so dist exists at runtime
+// Use require() to handle CommonJS module from compiled dist
+const appModule = require('../server/dist/index');
+const app = appModule.default || appModule;
 
 // Wrap Express app with serverless-http for Vercel
 const handler = serverless(app);
