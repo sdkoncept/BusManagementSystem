@@ -40,9 +40,14 @@ export const useAuthStore = create<AuthState>()(
         api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
       },
       register: async (data: RegisterData) => {
-        const response = await api.post('/auth/register', data);
-        set({ user: response.data.user, token: response.data.token });
-        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        try {
+          const response = await api.post('/auth/register', data);
+          set({ user: response.data.user, token: response.data.token });
+          api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        } catch (error: any) {
+          console.error('Registration error:', error);
+          throw error; // Re-throw to let the component handle it
+        }
       },
       logout: () => {
         set({ user: null, token: null });

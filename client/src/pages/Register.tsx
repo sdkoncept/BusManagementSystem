@@ -31,7 +31,12 @@ export default function Register() {
       toast.success('Registration successful!');
       navigate('/dashboard');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Registration failed');
+      console.error('Registration error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Registration failed. Please try again.';
+      toast.error(errorMessage);
+      if (error.response?.status === 405) {
+        toast.error('Server configuration error. Please contact support.');
+      }
     } finally {
       setLoading(false);
     }
