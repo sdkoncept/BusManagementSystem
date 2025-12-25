@@ -5,9 +5,25 @@
 import serverless from 'serverless-http';
 
 // Import Express app - use require for CommonJS compatibility
-// The server is built during buildCommand, so dist exists at runtime
-const appModule = require('../server/dist/index');
-const app = appModule.default || appModule;
+// Try dist first (production), fallback to source (development)
+let app: any;
+try {
+  // @ts-ignore - require() for CommonJS
+  const appModule = require('../server/dist/index');
+  app = appModule.default || appModule;
+  console.log('Loaded app from dist');
+} catch (error) {
+  console.error('Failed to load from dist, trying source:', error);
+  try {
+    // @ts-ignore - require() for CommonJS
+    const appModule = require('../server/src/index');
+    app = appModule.default || appModule;
+    console.log('Loaded app from source');
+  } catch (sourceError) {
+    console.error('Failed to load app from source:', sourceError);
+    throw new Error('Failed to load Express app');
+  }
+}
 
 // Wrap Express app with serverless-http for Vercel
 const handler = serverless(app);
