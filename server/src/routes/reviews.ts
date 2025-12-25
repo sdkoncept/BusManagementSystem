@@ -69,7 +69,7 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
         
         await prisma.driver.update({
           where: { id: trip.driverId },
-          data: { rating: avgDriverRating } as any,
+          data: { rating: avgDriverRating as unknown as number },
         });
       }
     }
