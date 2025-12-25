@@ -67,9 +67,9 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
         const driverRatings = driverTrips.flatMap(t => t.reviews.map(r => r.driverRating!));
         const avgDriverRating = driverRatings.reduce((sum, r) => sum + r, 0) / driverRatings.length;
         
-        await prisma.driver.update({
+        await (prisma.driver.update as any)({
           where: { id: trip.driverId },
-          data: { rating: avgDriverRating as unknown as number },
+          data: { rating: avgDriverRating },
         });
       }
     }
